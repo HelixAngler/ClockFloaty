@@ -37,7 +37,9 @@ class ClockService : Service() {
     lateinit var changesListener:SharedPreferences.OnSharedPreferenceChangeListener
 
 
-
+    override fun onBind(intent: Intent): IBinder? {
+        return null
+    }
 
     override fun onStartCommand(
         intent: Intent?,
@@ -375,7 +377,7 @@ class ClockService : Service() {
         ) {
             setTicker(null)
             setContentTitle(getString(R.string.app_name))
-            setContentText(getString(R.string.clocky_floaty_running_message))
+            setContentText(getString(R.string.clock_floaty_running_message))
             setAutoCancel(false)
             setOngoing(true)
             setWhen(System.currentTimeMillis())
