@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ClockFloaty</string>
+    <string name="preference_file_key">IUsxgNb7QRioGEuG7gA8DIExDfBw54eQ6kHemr2o5vx7jjRvfXBdPv5MBA0kmm1D</string>
+
+    <string name="clocky_floaty_running_message">ClockyFloaty is running</string>
+
+</resources>

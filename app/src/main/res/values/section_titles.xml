@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_settings_title">Settings</string>
+    <string name="app_appearance_title">Appearance</string>
+    <string name="app_home_title">ClockFloaty</string>
+</resources>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SettingsUI">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+        <include layout="@layout/section_title" android:id="@+id/settingsMenuTitle"/>
+
+        <LinearLayout
+            android:id="@+id/settingsOptionsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <Switch
+                android:id="@+id/switch24Hour"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/switch_24_hour" />
+
+            <Switch
+                android:id="@+id/switchSecond"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/switch_seconds" />
+
+            <Switch
+                android:id="@+id/switchMilliSecond"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/switch_milliseconds" />
+
+            <Switch
+                android:id="@+id/switchUSFormat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/switch_US_format" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

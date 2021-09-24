@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pick_background_color">Change Widget Background Color</string>
+    <string name="pick_text_color">Change Widget Text Color</string>
+    <string name="pick_text_font">Change Widget Text Font</string>
+    <string name="adjust_corner_x">Adjust Widget X Corner Radius</string>
+    <string name="adjust_corner_y">Adjust Widget Y Corner Radius</string>
+    <string name="adjust_time_text_size">Adjust Time Text Size</string>
+    <string name="adjust_date_text_size">Adjust Date Text Size</string>
+    <string name="adjust_width">Adjust Widget Width</string>
+    <string name="adjust_height">Adjust Widget Height</string>
+    <string name="sample_text">This Is Example</string>
+    <string name="pick_the_color_text">Pick The Color</string>
+    <string name="pick_the_font_text">Pick The Font</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="defaultWidgetBackgroundColor">#33000000</string>
+    <string name="defaultWidgetTextColor">#FFFFFFFF</string>
+    <string name="defaultWidgetFont">"DroidSansMono.ttf"</string>
+    <integer name="defaultWidgetTimeTextSize">16</integer>
+    <integer name="defaultWidgetDateTextSize">12</integer>
+    <integer name="defaultWidgetXCornerRadius">50</integer>
+    <integer name="defaultWidgetYCornerRadius">50</integer>
+    <integer name="defaultWidgetWidth">150</integer>
+    <integer name="defaultWidgetHeight">50</integer>
+</resources>

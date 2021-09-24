@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="switch_24_hour">Use 24-hour format</string>
+    <string name="switch_seconds">Show seconds</string>
+    <string name="switch_milliseconds">Show milliseconds</string>
+    <string name="switch_US_format">Show US date format</string>
+</resources>

@@ -1,0 +1,10 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.ClockFloaty.Main" parent="Theme.MaterialComponents.DayNight.DarkActionBar.Bridge">
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="actionBarStyle">@style/UIActionBar</item>
+        <item name="android:actionBarStyle">@style/UIActionBar</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+</resources>

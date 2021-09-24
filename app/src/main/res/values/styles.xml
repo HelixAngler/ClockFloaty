@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="UIActionBar" parent="@style/Widget.AppCompat.ActionBar.Solid">
+        <item name="android:background">@null</item>
+        <item name="background">@null</item>
+        <item name="android:titleTextStyle">@style/UIActionBar.TitleText</item>
+        <item name="titleTextStyle">@style/UIActionBar.TitleText</item>
+    </style>
+    <style name="UIActionBar.TitleText" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/black</item>
+    </style>
+    <style name="ActivityTitleStyle">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/gray66</item>
+    </style>
+    <style name="BottomBarStyle">
+        <item name="android:background">@color/gray245</item>
+        <item name="colorPrimary">@color/gray33</item>
+        <item name="android:textColorSecondary">@color/gray97</item>
+    </style>
+    <style name="LineColor">
+        <item name="android:background">@color/gray66</item>
+    </style>
+    <style name="SliderColor" parent="Widget.MaterialComponents.Slider">
+        <item name="colorPrimary">@color/gray117</item>
+        <item name="colorOnPrimary">@color/gray224</item>
+        <item name="colorOnSurface">@color/gray117</item>
+    </style>
+</resources>
