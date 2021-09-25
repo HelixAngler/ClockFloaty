@@ -6,7 +6,7 @@
 A fully-customizable floating clock application.
 
 # Features
-- Precision until 100 millisecond (HH:mm:ss.SS)
+- Precision until millisecond (HH:mm:ss.SS)
 - North American date format (MM dd, yyyy)
 - 24-hour adn 12-hour systems
 - Customizable floating clock
