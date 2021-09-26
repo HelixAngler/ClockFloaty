@@ -35,7 +35,7 @@ class ClockService : Service() {
     lateinit var dateAndTimeHandler:Handler
     lateinit var timeRunnable:Runnable
     lateinit var changesListener:SharedPreferences.OnSharedPreferenceChangeListener
-
+    lateinit var windowManagerLayoutParams:WindowManager.LayoutParams
 
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -94,11 +94,11 @@ class ClockService : Service() {
 
         windowMan.addView(floatingWidget,lyParams)
 
+        windowManagerLayoutParams = lyParams
+
         getTimeRunnable(floatingWidget,dataPreference)
 
-        theWidget.setOnTouchListener { v, event ->
-            clockMovementListener(v, event, lyParams)
-        }
+        widgetMovement()
 
         changesListener = SharedPreferences.OnSharedPreferenceChangeListener{sharedPreferences:SharedPreferences, key:String ->
             onPreferencesChanged(windowMan,floatingWidget,lyParams,sharedPreferences,key)
@@ -110,35 +110,49 @@ class ClockService : Service() {
 
     }
 
-    fun clockMovementListener(
-        v:View?,
-        event:MotionEvent?,
-        lyParams:WindowManager.LayoutParams
-    ):Boolean{
+    fun widgetMovement(){
+        var theWidget:View = floatingWidget.findViewById( R.id.float_widget) as View
+        var lyParams = windowManagerLayoutParams
+        theWidget.setOnTouchListener (object: View.OnTouchListener{
+            var onMove:Boolean = false
+            var offsetX:Float = 0.0F
+            var offsetY:Float = 0.0F
+            override fun onTouch(v: View?, event: MotionEvent?): Boolean {
 
-        when(event?.action){
+                when(event?.action){
+                    MotionEvent.ACTION_UP -> {
+                        if(onMove){
+                            offsetX = 0.0F
+                            offsetY = 0.0F
+                            onMove = false
+                        }
+                    }
+                    MotionEvent.ACTION_DOWN -> {
+                        if(!onMove){
+                            offsetX = event.rawX - lyParams.x
+                            offsetY = event.rawY - lyParams.y
+                            onMove = true
+                        }
+                        lyParams.x =(event.rawX - offsetX).toInt()
+                        lyParams.y = (event.rawY  - offsetY).toInt()
+                        return true
 
-            MotionEvent.ACTION_DOWN -> {
+                    }
 
-                lyParams.x =(event.rawX - v!!.layoutParams.width.toFloat()/2.0F).toInt()
-                lyParams.y = (event.rawY  - v!!.layoutParams.height.toFloat()).toInt()
-                return true
+                    MotionEvent.ACTION_MOVE -> {
 
+                        lyParams.x = (event.rawX - offsetX).toInt()
+                        lyParams.y = (event.rawY - offsetY).toInt()
+                        windowMan.updateViewLayout(floatingWidget,lyParams)
+                        return true
+
+                    }
+
+                }
+
+                return false
             }
-
-            MotionEvent.ACTION_MOVE -> {
-
-                lyParams.x = (event.rawX - v!!.layoutParams.width.toFloat()/2.0F).toInt()
-                lyParams.y = (event.rawY - v!!.layoutParams.height.toFloat()).toInt()
-                windowMan.updateViewLayout(floatingWidget,lyParams)
-                return true
-
-            }
-
-        }
-
-        return false
-
+        })
     }
 
     fun getSize():Array<Int>{
