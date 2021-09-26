@@ -120,16 +120,16 @@ class ClockService : Service() {
 
             MotionEvent.ACTION_DOWN -> {
 
-                lyParams.x =(event.rawX - v!!.width/2.0F).toInt()
-                lyParams.y = (event.rawY  - v!!.height/2.0F).toInt()
+                lyParams.x =(event.rawX - v!!.layoutParams.width.toFloat()/2.0F).toInt()
+                lyParams.y = (event.rawY  - v!!.layoutParams.height.toFloat()).toInt()
                 return true
 
             }
 
             MotionEvent.ACTION_MOVE -> {
 
-                lyParams.x = (event.rawX - v!!.width.toFloat()/2.0F).toInt()
-                lyParams.y = (event.rawY - v!!.height.toFloat()/2.0F).toInt()
+                lyParams.x = (event.rawX - v!!.layoutParams.width.toFloat()/2.0F).toInt()
+                lyParams.y = (event.rawY - v!!.layoutParams.height.toFloat()).toInt()
                 windowMan.updateViewLayout(floatingWidget,lyParams)
                 return true
 
