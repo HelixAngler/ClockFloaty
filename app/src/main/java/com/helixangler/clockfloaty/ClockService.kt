@@ -23,19 +23,20 @@ import androidx.core.app.NotificationCompat
 
 class ClockService : Service() {
 
-    var FLAG_LY: Int= 0
-    val COMMAND="com.helixangler.clockyfloaty.CLOCKYFLOATYFLOATCOMMAND"
-    val EXIT="CLOCKYFLOATYONEXIT"
-    val NOTIFICATION_CHANNEL_GENERAL = "clockyfloaty_general"
-    val CODE_FOREGROUND_SERVICE = 1
-    val CODE_EXIT = 2
-    lateinit var floatingWidget:View
-    lateinit var windowMan:WindowManager
-    lateinit var dataPreference:SharedPreferences
-    lateinit var dateAndTimeHandler:Handler
-    lateinit var timeRunnable:Runnable
-    lateinit var changesListener:SharedPreferences.OnSharedPreferenceChangeListener
-    lateinit var windowManagerLayoutParams:WindowManager.LayoutParams
+    private var FLAG_LY: Int= 0
+    private val COMMAND="com.helixangler.clockyfloaty.CLOCKYFLOATYFLOATCOMMAND"
+    private val EXIT="CLOCKYFLOATYONEXIT"
+    private val NOTIFICATION_CHANNEL_GENERAL = "clockyfloaty_general"
+    private val CODE_FOREGROUND_SERVICE = 1
+    private val CODE_EXIT = 2
+
+    private lateinit var floatingWidget:View
+    private lateinit var windowMan:WindowManager
+    private lateinit var dataPreference:SharedPreferences
+    private lateinit var dateAndTimeHandler:Handler
+    private lateinit var timeRunnable:Runnable
+    private lateinit var changesListener:SharedPreferences.OnSharedPreferenceChangeListener
+    private lateinit var windowManagerLayoutParams:WindowManager.LayoutParams
 
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -46,7 +47,9 @@ class ClockService : Service() {
         flags: Int,
         startId: Int
     ): Int {
+
         val command = intent?.getStringExtra(COMMAND) ?: ""
+
         if(command == EXIT){
             dataPreference.edit().putBoolean("activateWidget",false).apply()
             return START_NOT_STICKY
@@ -62,18 +65,11 @@ class ClockService : Service() {
 
         windowMan = getSystemService(WINDOW_SERVICE) as WindowManager
         dataPreference = this.applicationContext.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
-
-        var show24Hour:Boolean = dataPreference.getBoolean("show24Hour",false)
-        var showSecond:Boolean = dataPreference.getBoolean("showSecond",false)
-        var showMilliSecond:Boolean = dataPreference.getBoolean("showMilliSecond",false)
-        var showUSFormat:Boolean = dataPreference.getBoolean("showUSFormat",false)
-
         floatingWidget = LayoutInflater.from(this).inflate(R.layout.clock_floating_widget,null)
         floatingWidget.visibility = View.VISIBLE
 
         var theWidget:View = floatingWidget.findViewById( R.id.float_widget) as View
         configureAppearance(theWidget,dataPreference)
-
 
         var lyParams:WindowManager.LayoutParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -84,8 +80,6 @@ class ClockService : Service() {
 
         lyParams.gravity = Gravity.TOP or Gravity.LEFT
 
-
-
         val size:Array<Int> = getSize()
         val screenWidth:Float = size[0].toFloat()
         val screenHeight:Float = size[1].toFloat()
@@ -93,15 +87,13 @@ class ClockService : Service() {
         lyParams.y = ((screenHeight - theWidget.layoutParams.height)/2.0F).toInt()
 
         windowMan.addView(floatingWidget,lyParams)
-
         windowManagerLayoutParams = lyParams
 
         getTimeRunnable(floatingWidget,dataPreference)
-
-        widgetMovement()
+        widgetMovement(theWidget, windowManagerLayoutParams)
 
         changesListener = SharedPreferences.OnSharedPreferenceChangeListener{sharedPreferences:SharedPreferences, key:String ->
-            onPreferencesChanged(windowMan,floatingWidget,lyParams,sharedPreferences,key)
+            onPreferencesChanged(floatingWidget,lyParams,sharedPreferences,key)
         }
 
         dataPreference.registerOnSharedPreferenceChangeListener(changesListener)
@@ -110,9 +102,8 @@ class ClockService : Service() {
 
     }
 
-    fun widgetMovement(){
-        var theWidget:View = floatingWidget.findViewById( R.id.float_widget) as View
-        var lyParams = windowManagerLayoutParams
+    private fun widgetMovement(theWidget:View, lyParams:WindowManager.LayoutParams){
+
         theWidget.setOnTouchListener (object: View.OnTouchListener{
             var onMove:Boolean = false
             var offsetX:Float = 0.0F
@@ -155,7 +146,7 @@ class ClockService : Service() {
         })
     }
 
-    fun getSize():Array<Int>{
+    private fun getSize():Array<Int>{
 
         val winManager = getSystemService(WINDOW_SERVICE) as WindowManager
         var width:Int = 0
@@ -181,8 +172,8 @@ class ClockService : Service() {
 
     }
 
-    fun onPreferencesChanged(
-        winManager:WindowManager,
+    private fun onPreferencesChanged(
+
         baseWidget:View,layoutParameters: WindowManager.LayoutParams,
         sharedPreferences:SharedPreferences,
         key:String
@@ -224,7 +215,7 @@ class ClockService : Service() {
         }
     }
 
-    fun getTimeRunnable(
+    private fun getTimeRunnable(
         baseWidget:View,
         sharedPreferences: SharedPreferences
     ):Handler{
@@ -305,7 +296,7 @@ class ClockService : Service() {
     }
 
 
-    fun configureAppearance(theWidget:View, sharedPreferences: SharedPreferences){
+    private fun configureAppearance(theWidget:View, sharedPreferences: SharedPreferences){
 
         theWidget.layoutParams.width = (sharedPreferences.getInt("widgetWidth",resources.getInteger(R.integer.defaultWidgetWidth))*resources.displayMetrics.density).toInt()
         theWidget.layoutParams.height = (sharedPreferences.getInt("widgetHeight",resources.getInteger(R.integer.defaultWidgetHeight))*resources.displayMetrics.density).toInt()
@@ -342,19 +333,19 @@ class ClockService : Service() {
         val face = Typeface.createFromFile(
             "/system/fonts/" + sharedPreferences.getString("widgetTextFont",getString(R.string.defaultWidgetFont))
         )
+
         floatingWidgetTimeDisplay.typeface = face
         floatingWidgetDateDisplay.typeface = face
-
         floatingWidgetTimeDisplay.setTextSize(TypedValue.COMPLEX_UNIT_SP,sharedPreferences.getInt("widgetTimeTextSize",resources.getInteger(R.integer.defaultWidgetTimeTextSize)).toFloat())
         floatingWidgetDateDisplay.setTextSize(TypedValue.COMPLEX_UNIT_SP,sharedPreferences.getInt("widgetDateTextSize",resources.getInteger(R.integer.defaultWidgetDateTextSize)).toFloat())
     }
 
-    fun stopService() {
+    private fun stopService() {
         stopForeground(true)
         stopSelf()
     }
 
-    fun notificate(){
+    private fun notificate(){
         val man = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val intentExit = Intent(this,ClockService::class.java).apply{
             putExtra(COMMAND,EXIT)
