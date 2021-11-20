@@ -22,7 +22,6 @@ import androidx.core.app.NotificationCompat
 
 
 class ClockService : Service() {
-
     private var FLAG_LY: Int= 0
     private val COMMAND="com.helixangler.clockyfloaty.CLOCKYFLOATYFLOATCOMMAND"
     private val EXIT="CLOCKYFLOATYONEXIT"
@@ -30,7 +29,8 @@ class ClockService : Service() {
     private val CODE_FOREGROUND_SERVICE = 1
     private val CODE_EXIT = 2
 
-    private lateinit var floatingWidget:View
+    private lateinit var clockWidgetContainer:View
+    private lateinit var clockWidget:View
     private lateinit var windowMan:WindowManager
     private lateinit var dataPreference:SharedPreferences
     private lateinit var dateAndTimeHandler:Handler
@@ -47,15 +47,13 @@ class ClockService : Service() {
         flags: Int,
         startId: Int
     ): Int {
-
         val command = intent?.getStringExtra(COMMAND) ?: ""
-
         if(command == EXIT){
             dataPreference.edit().putBoolean("activateWidget",false).apply()
             return START_NOT_STICKY
         }
 
-        notificate()
+        setNotification()
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             FLAG_LY = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -64,52 +62,59 @@ class ClockService : Service() {
         }
 
         windowMan = getSystemService(WINDOW_SERVICE) as WindowManager
-        dataPreference = this.applicationContext.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
-        floatingWidget = LayoutInflater.from(this).inflate(R.layout.clock_floating_widget,null)
-        floatingWidget.visibility = View.VISIBLE
+        dataPreference = this.applicationContext.getSharedPreferences(
+            getString(R.string.preference_file_key),
+            Context.MODE_PRIVATE
+        )
+        clockWidgetContainer = LayoutInflater
+            .from(this)
+            .inflate(
+                R.layout.clock_floating_widget,
+                null
+            )
+        clockWidgetContainer.visibility = View.VISIBLE
+        clockWidget = clockWidgetContainer.findViewById( R.id.float_widget) as View
 
-        var theWidget:View = floatingWidget.findViewById( R.id.float_widget) as View
-        configureAppearance(theWidget,dataPreference)
+        configureAppearance()
 
         var lyParams:WindowManager.LayoutParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             FLAG_LY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-            PixelFormat.TRANSLUCENT)
-
-        lyParams.gravity = Gravity.TOP or Gravity.LEFT
+            PixelFormat.TRANSLUCENT
+        )
+        lyParams.gravity = Gravity.TOP or Gravity.START or Gravity.LEFT
 
         val size:Array<Int> = getSize()
         val screenWidth:Float = size[0].toFloat()
         val screenHeight:Float = size[1].toFloat()
-        lyParams.x = ((screenWidth - theWidget.layoutParams.width)/2.0F).toInt()
-        lyParams.y = ((screenHeight - theWidget.layoutParams.height)/2.0F).toInt()
 
-        windowMan.addView(floatingWidget,lyParams)
+        lyParams.x = ((screenWidth - clockWidget.layoutParams.width)/2.0F).toInt()
+        lyParams.y = ((screenHeight - clockWidget.layoutParams.height)/2.0F).toInt()
+
+        windowMan.addView(clockWidgetContainer,lyParams)
         windowManagerLayoutParams = lyParams
 
-        getTimeRunnable(floatingWidget,dataPreference)
-        widgetMovement(theWidget, windowManagerLayoutParams)
+        getTimeRunnable()
+        widgetMovement()
 
-        changesListener = SharedPreferences.OnSharedPreferenceChangeListener{sharedPreferences:SharedPreferences, key:String ->
-            onPreferencesChanged(floatingWidget,lyParams,sharedPreferences,key)
+        changesListener = SharedPreferences.OnSharedPreferenceChangeListener{
+                sharedPreferences:SharedPreferences, key:String ->
+                    onPreferencesChanged(key)
         }
-
         dataPreference.registerOnSharedPreferenceChangeListener(changesListener)
 
         return START_STICKY
-
     }
 
-    private fun widgetMovement(theWidget:View, lyParams:WindowManager.LayoutParams){
-
-        theWidget.setOnTouchListener (object: View.OnTouchListener{
+    private fun widgetMovement(){
+        clockWidget.setOnTouchListener (object: View.OnTouchListener{
             var onMove:Boolean = false
             var offsetX:Float = 0.0F
             var offsetY:Float = 0.0F
-            override fun onTouch(v: View?, event: MotionEvent?): Boolean {
 
+            override fun onTouch(v: View?, event: MotionEvent?): Boolean {
                 when(event?.action){
                     MotionEvent.ACTION_UP -> {
                         if(onMove){
@@ -120,169 +125,159 @@ class ClockService : Service() {
                     }
                     MotionEvent.ACTION_DOWN -> {
                         if(!onMove){
-                            offsetX = event.rawX - lyParams.x
-                            offsetY = event.rawY - lyParams.y
+                            offsetX = event.rawX - windowManagerLayoutParams.x
+                            offsetY = event.rawY - windowManagerLayoutParams.y
                             onMove = true
                         }
-                        lyParams.x =(event.rawX - offsetX).toInt()
-                        lyParams.y = (event.rawY  - offsetY).toInt()
+                        windowManagerLayoutParams.x =(event.rawX - offsetX).toInt()
+                        windowManagerLayoutParams.y = (event.rawY  - offsetY).toInt()
                         return true
-
                     }
-
                     MotionEvent.ACTION_MOVE -> {
-
-                        lyParams.x = (event.rawX - offsetX).toInt()
-                        lyParams.y = (event.rawY - offsetY).toInt()
-                        windowMan.updateViewLayout(floatingWidget,lyParams)
+                        windowManagerLayoutParams.x = (event.rawX - offsetX).toInt()
+                        windowManagerLayoutParams.y = (event.rawY - offsetY).toInt()
+                        windowMan.updateViewLayout(
+                            clockWidgetContainer,
+                            windowManagerLayoutParams
+                        )
                         return true
-
                     }
-
                 }
-
                 return false
             }
         })
     }
 
     private fun getSize():Array<Int>{
-
         val winManager = getSystemService(WINDOW_SERVICE) as WindowManager
         var width:Int = 0
         var height:Int = 0
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
-
             val winMetrics = winManager.currentWindowMetrics
-            val winInsets = winMetrics.windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
+            val winInsets = winMetrics.windowInsets.getInsetsIgnoringVisibility(
+                WindowInsets
+                    .Type
+                    .systemBars()
+            )
             width = winMetrics.bounds.width() - (winInsets.left + winInsets.right)
             height = winMetrics.bounds.height() - (winInsets.top + winInsets.bottom)
-
         } else {
-
-            var dpMetrics = DisplayMetrics()
+            val dpMetrics = DisplayMetrics()
             winManager.defaultDisplay.getMetrics(dpMetrics)
             width = dpMetrics.widthPixels
             height = dpMetrics.heightPixels
-
         }
 
         return arrayOf(width,height)
-
     }
 
-    private fun onPreferencesChanged(
-
-        baseWidget:View,layoutParameters: WindowManager.LayoutParams,
-        sharedPreferences:SharedPreferences,
-        key:String
-    ){
+    private fun onPreferencesChanged(key:String){
         var isTimeFormatChanged:Boolean = false
         var isAppearanceChanged:Boolean = false
         var isActivateWidgetChanged:Boolean = false
 
-        var theWidget = baseWidget.findViewById(R.id.float_widget) as View
 
         when(key){
 
-            "show24Hour","showSecond","showMilliSecond","showUSFormat" -> {
+            "show24Hour",
+            "showSecond",
+            "showMilliSecond",
+            "showUSFormat" -> {
                 isTimeFormatChanged = true
             }
             "activateWidget"->{
                 isActivateWidgetChanged = true
             }
-            "widgetWidth","widgetHeight","widgetRoundX","widgetRoundY","widgetBGColor","widgetTextColor","widgetTextFont","widgetTimeTextSize","widgetDateTextSize" -> {
+            "widgetWidth",
+            "widgetHeight",
+            "widgetRoundX",
+            "widgetRoundY",
+            "widgetBGColor",
+            "widgetTextColor",
+            "widgetTextFont",
+            "widgetTimeTextSize",
+            "widgetDateTextSize" -> {
                 isAppearanceChanged = true
             }
 
         }
 
         if(isTimeFormatChanged){
-
-
-            println("executed")
-            getTimeRunnable(floatingWidget,sharedPreferences)
-
+            getTimeRunnable()
         } else if(isAppearanceChanged){
-            configureAppearance(theWidget, sharedPreferences)
+            configureAppearance()
         } else if(isActivateWidgetChanged){
-            if(!sharedPreferences.getBoolean("activateWidget",false)){
-
+            if(!dataPreference.getBoolean(
+                    "activateWidget",
+                    false
+                )
+            ){
                 stopService()
-
             }
         }
     }
 
-    private fun getTimeRunnable(
-        baseWidget:View,
-        sharedPreferences: SharedPreferences
-    ):Handler{
-        var show24Hour:Boolean = sharedPreferences.getBoolean("show24Hour",false)
-        var showSecond:Boolean = sharedPreferences.getBoolean("showSecond",false)
-        var showMilliSecond:Boolean = sharedPreferences.getBoolean("showMilliSecond",false)
-        var showUSFormat:Boolean = sharedPreferences.getBoolean("showUSFormat",false)
+    private fun getTimeRunnable():Handler{
 
-        var theWidget: View = baseWidget.findViewById(R.id.float_widget) as View
+        // Get Shared Preferences for the time format
+        val show24Hour:Boolean = dataPreference.getBoolean("show24Hour",false)
+        val showSecond:Boolean = dataPreference.getBoolean("showSecond",false)
+        val showMilliSecond:Boolean = dataPreference.getBoolean("showMilliSecond",false)
+        val showUSFormat:Boolean = dataPreference.getBoolean("showUSFormat",false)
 
+        // Initialize Date and Time handler
         if(!this::dateAndTimeHandler.isInitialized) {
             dateAndTimeHandler = Handler(Looper.getMainLooper())
         }
 
+        // Set Time format
         var milliSecondTolerance:Long = 1000L
         var timePattern:String = ""
-        var datePattern:String = "dd MMM yyyy"
-
         if(show24Hour) timePattern += "HH"
         else timePattern += "hh"
         timePattern += ":mm"
         if(showSecond) timePattern += ":ss"
-
         if(showSecond && showMilliSecond) {
-
             timePattern += ".SS"
             milliSecondTolerance = 10L
-
         }
-
         if(!show24Hour) timePattern += " aa"
-
-        var timeFunction:(Date) -> String = {date:Date ->
+        val timeFunction:(Date) -> String = {date:Date ->
             SimpleDateFormat(timePattern).format(date)
         }
 
+        // Set Date format
+        var datePattern:String = "dd MMM yyyy"
         if(showUSFormat){
             datePattern = "MMM dd, yyyy"
         }
-
-        var dateFunction:(Date) -> String = {date:Date ->
+        val dateFunction:(Date) -> String = {date:Date ->
             SimpleDateFormat(datePattern).format(date)
         }
 
+        // Remove previous Runnable (timeRunnable) from Date and Time handler postDelayed callback
         if(this::timeRunnable.isInitialized){
             dateAndTimeHandler.removeCallbacks(timeRunnable)
         }
 
+        // create new Runnable (timeRunnable) for Date and Time handler postDelayed callback
         timeRunnable = object:Runnable{
-
             var timeFunc = timeFunction
             var dateFunc = dateFunction
             var timeTolerance = milliSecondTolerance
 
+            // Updating date and time to clock widget
             override fun run(){
-
                 var currentTime:Date = Date()
-                theWidget.findViewById<TextView>(R.id.clock)?.text = timeFunc(currentTime)
-                theWidget.findViewById<TextView>(R.id.date_time)?.text = dateFunc(currentTime)
+                clockWidget.findViewById<TextView>(R.id.clock)?.text = timeFunc(currentTime)
+                clockWidget.findViewById<TextView>(R.id.date_time)?.text = dateFunc(currentTime)
                 dateAndTimeHandler.postDelayed(this,timeTolerance)
-
             }
-
         }
 
+        // Pushing Runnable (timeRunnable) into Date and Time handler
         dateAndTimeHandler.postDelayed(timeRunnable,0)
-
         return dateAndTimeHandler
 
     }
@@ -291,53 +286,105 @@ class ClockService : Service() {
         super.onDestroy()
         dataPreference.unregisterOnSharedPreferenceChangeListener(changesListener)
         dateAndTimeHandler.removeCallbacks(timeRunnable)
-        windowMan.removeView(floatingWidget)
+        windowMan.removeView(clockWidgetContainer)
         ServiceRunningSingleton.isRunning = false
     }
 
 
-    private fun configureAppearance(theWidget:View, sharedPreferences: SharedPreferences){
-
-        theWidget.layoutParams.width = (sharedPreferences.getInt("widgetWidth",resources.getInteger(R.integer.defaultWidgetWidth))*resources.displayMetrics.density).toInt()
-        theWidget.layoutParams.height = (sharedPreferences.getInt("widgetHeight",resources.getInteger(R.integer.defaultWidgetHeight))*resources.displayMetrics.density).toInt()
-        var widgetBackground:Bitmap = Bitmap.createBitmap(theWidget.layoutParams.width,theWidget.layoutParams.height, Bitmap.Config.ARGB_8888)
+    private fun configureAppearance(){
+        clockWidget.layoutParams.width = (
+                dataPreference.getInt(
+                        "widgetWidth",
+                        resources.getInteger(R.integer.defaultWidgetWidth)
+                    )*resources.displayMetrics.density
+                ).toInt()
+        clockWidget.layoutParams.height = (
+                    dataPreference.getInt(
+                        "widgetHeight",
+                        resources.getInteger(R.integer.defaultWidgetHeight)
+                    )*resources.displayMetrics.density
+                ).toInt()
+        var widgetBackground:Bitmap = Bitmap.createBitmap(
+            clockWidget.layoutParams.width,
+            clockWidget.layoutParams.height,
+            Bitmap.Config.ARGB_8888
+        )
         var canvas:Canvas = Canvas(widgetBackground)
+
         val paint = Paint()
+
         paint.isAntiAlias = true
         paint.color = Color.parseColor(
-            sharedPreferences.getString("widgetBGColor",getString(R.string.defaultWidgetBackgroundColor))
+            dataPreference.getString(
+                "widgetBGColor",
+                getString(R.string.defaultWidgetBackgroundColor)
+            )
         )
-        val rect = Rect(0, 0, theWidget.layoutParams.width, theWidget.layoutParams.height)
+
+        val rect = Rect(
+            0,
+            0,
+            clockWidget.layoutParams.width,
+            clockWidget.layoutParams.height
+        )
         val rectF = RectF(rect)
         canvas.drawRoundRect(
             rectF,
-            sharedPreferences.getFloat("widgetRoundX",resources.getInteger(R.integer.defaultWidgetXCornerRadius).toFloat()),
-            sharedPreferences.getFloat("widgetRoundY",resources.getInteger(R.integer.defaultWidgetYCornerRadius).toFloat()),
+            dataPreference.getFloat(
+                "widgetRoundX",
+                resources.getInteger(R.integer.defaultWidgetXCornerRadius).toFloat()
+            ),
+            dataPreference.getFloat(
+                "widgetRoundY",
+                resources.getInteger(R.integer.defaultWidgetYCornerRadius).toFloat()
+            ),
             paint
         )
 
+        clockWidget.background = BitmapDrawable(resources,widgetBackground)
 
-
-        theWidget.background = BitmapDrawable(resources,widgetBackground)
-        var floatingWidgetTimeDisplay:TextView = theWidget.findViewById(R.id.clock) as TextView
-        var floatingWidgetDateDisplay:TextView = theWidget.findViewById(R.id.date_time) as TextView
-        floatingWidgetTimeDisplay.setTextColor(Color.parseColor(
-            sharedPreferences.getString("widgetTextColor",getString(R.string.defaultWidgetTextColor))
-        ))
-        floatingWidgetDateDisplay.findViewById<TextView>(R.id.date_time)?.setTextColor(Color.parseColor(
-            sharedPreferences.getString("widgetTextColor",getString(R.string.defaultWidgetTextColor))
-        ))
-
-
-
-        val face = Typeface.createFromFile(
-            "/system/fonts/" + sharedPreferences.getString("widgetTextFont",getString(R.string.defaultWidgetFont))
+        var clockWidgetTimeDisplay:TextView = clockWidget.findViewById(R.id.clock) as TextView
+        var clockWidgetDateDisplay:TextView = clockWidget.findViewById(R.id.date_time) as TextView
+        clockWidgetTimeDisplay.setTextColor(
+            Color.parseColor(
+                dataPreference.getString(
+                    "widgetTextColor",
+                    getString(R.string.defaultWidgetTextColor)
+                )
+            )
+        )
+        clockWidgetDateDisplay.findViewById<TextView>(R.id.date_time)?.setTextColor(
+            Color.parseColor(
+                dataPreference.getString(
+                    "widgetTextColor",
+                    getString(R.string.defaultWidgetTextColor)
+                )
+            )
         )
 
-        floatingWidgetTimeDisplay.typeface = face
-        floatingWidgetDateDisplay.typeface = face
-        floatingWidgetTimeDisplay.setTextSize(TypedValue.COMPLEX_UNIT_SP,sharedPreferences.getInt("widgetTimeTextSize",resources.getInteger(R.integer.defaultWidgetTimeTextSize)).toFloat())
-        floatingWidgetDateDisplay.setTextSize(TypedValue.COMPLEX_UNIT_SP,sharedPreferences.getInt("widgetDateTextSize",resources.getInteger(R.integer.defaultWidgetDateTextSize)).toFloat())
+        val face = Typeface.createFromFile(
+            "/system/fonts/" + dataPreference.getString(
+                "widgetTextFont",
+                getString(R.string.defaultWidgetFont)
+            )
+        )
+
+        clockWidgetTimeDisplay.typeface = face
+        clockWidgetDateDisplay.typeface = face
+        clockWidgetTimeDisplay.setTextSize(
+            TypedValue.COMPLEX_UNIT_SP,
+            dataPreference.getInt(
+                "widgetTimeTextSize",
+                resources.getInteger(R.integer.defaultWidgetTimeTextSize)
+            ).toFloat()
+        )
+        clockWidgetDateDisplay.setTextSize(
+            TypedValue.COMPLEX_UNIT_SP,
+            dataPreference.getInt(
+                "widgetDateTextSize",
+                resources.getInteger(R.integer.defaultWidgetDateTextSize)
+            ).toFloat()
+        )
     }
 
     private fun stopService() {
@@ -345,13 +392,18 @@ class ClockService : Service() {
         stopSelf()
     }
 
-    private fun notificate(){
+    private fun setNotification(){
         val man = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val intentExit = Intent(this,ClockService::class.java).apply{
+        val intentExit = Intent(
+            this,
+            ClockService::class.java
+        ).apply{
             putExtra(COMMAND,EXIT)
         }
         val pendingExit = PendingIntent.getService(
-            this,CODE_EXIT, intentExit, 0
+            this,CODE_EXIT,
+            intentExit,
+            0
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
@@ -397,7 +449,5 @@ class ClockService : Service() {
             )
             startForeground(CODE_FOREGROUND_SERVICE, build())
         }
-
     }
-
 }

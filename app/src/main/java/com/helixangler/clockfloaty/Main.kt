@@ -46,7 +46,10 @@ class Main : AppCompatActivity() {
         }
 
 
-        var dataPreference = this.applicationContext.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+        var dataPreference = this.applicationContext.getSharedPreferences(
+            getString(R.string.preference_file_key),
+            Context.MODE_PRIVATE
+        )
 
         initAppearanceParams(dataPreference)
 
@@ -55,14 +58,14 @@ class Main : AppCompatActivity() {
         }
 
 
-        changesListener = SharedPreferences.OnSharedPreferenceChangeListener{sharedPreferences:SharedPreferences, key:String ->
-            if(key == "activateWidget" ){
-                if(sharedPreferences.getBoolean("activateWidget",false)){
-                    initClockWidget()
+        changesListener = SharedPreferences.OnSharedPreferenceChangeListener{
+                sharedPreferences:SharedPreferences,
+                key:String -> if(key == "activateWidget" ){
+                    if(sharedPreferences.getBoolean("activateWidget",false)){
+                        initClockWidget()
+                    }
                 }
-            }
         }
-
         dataPreference.registerOnSharedPreferenceChangeListener(changesListener)
 
 
@@ -96,15 +99,73 @@ class Main : AppCompatActivity() {
 
     fun initAppearanceParams(sharedPreferences: SharedPreferences){
         var editor:SharedPreferences.Editor = sharedPreferences.edit()
-        editor.putInt("widgetWidth",sharedPreferences.getInt("widgetWidth",resources.getInteger(R.integer.defaultWidgetWidth)))
-        editor.putInt("widgetHeight",sharedPreferences.getInt("widgetHeight",resources.getInteger(R.integer.defaultWidgetHeight)))
-        editor.putInt("widgetTimeTextSize",sharedPreferences.getInt("widgetTimeTextSize",resources.getInteger(R.integer.defaultWidgetTimeTextSize)))
-        editor.putInt("widgetDateTextSize",sharedPreferences.getInt("widgetDateTextSize",resources.getInteger(R.integer.defaultWidgetDateTextSize)))
-        editor.putFloat("widgetRoundX",sharedPreferences.getFloat("widgetRoundX",resources.getInteger(R.integer.defaultWidgetXCornerRadius).toFloat()))
-        editor.putFloat("widgetRoundY",sharedPreferences.getFloat("widgetRoundY",resources.getInteger(R.integer.defaultWidgetYCornerRadius).toFloat()))
-        editor.putString("widgetBGColor",sharedPreferences.getString("widgetBGColor",getString(R.string.defaultWidgetBackgroundColor)))
-        editor.putString("widgetTextColor",sharedPreferences.getString("widgetTextColor",getString(R.string.defaultWidgetTextColor)))
-        editor.putString("widgetTextFont",sharedPreferences.getString("widgetTextFont",getString(R.string.defaultWidgetFont)))
+        editor.putInt(
+            "widgetWidth",
+            sharedPreferences.getInt(
+                "widgetWidth",
+                resources.getInteger(R.integer.defaultWidgetWidth)
+            )
+        )
+        editor.putInt(
+            "widgetHeight",
+            sharedPreferences.getInt(
+                "widgetHeight",
+                resources.getInteger(R.integer.defaultWidgetHeight)
+            )
+        )
+        editor.putInt(
+            "widgetTimeTextSize",
+            sharedPreferences.getInt(
+                "widgetTimeTextSize",
+                resources.getInteger(R.integer.defaultWidgetTimeTextSize)
+            )
+        )
+        editor.putInt(
+            "widgetDateTextSize",
+            sharedPreferences.getInt(
+                "widgetDateTextSize",
+                resources.getInteger(R.integer.defaultWidgetDateTextSize)
+            )
+        )
+        editor.putFloat(
+            "widgetRoundX",
+            sharedPreferences.getFloat(
+                "widgetRoundX",
+                resources
+                    .getInteger(R.integer.defaultWidgetXCornerRadius)
+                    .toFloat()
+            )
+        )
+        editor.putFloat(
+            "widgetRoundY",
+            sharedPreferences.getFloat(
+                "widgetRoundY",
+                resources
+                    .getInteger(R.integer.defaultWidgetYCornerRadius)
+                    .toFloat()
+            )
+        )
+        editor.putString(
+            "widgetBGColor",
+            sharedPreferences.getString(
+                "widgetBGColor",
+                getString(R.string.defaultWidgetBackgroundColor)
+            )
+        )
+        editor.putString(
+            "widgetTextColor",
+            sharedPreferences.getString(
+                "widgetTextColor",
+                getString(R.string.defaultWidgetTextColor)
+            )
+        )
+        editor.putString(
+            "widgetTextFont",
+            sharedPreferences.getString(
+                "widgetTextFont",
+                getString(R.string.defaultWidgetFont)
+            )
+        )
         editor.apply()
     }
 
@@ -120,7 +181,11 @@ class Main : AppCompatActivity() {
         if(!Settings.canDrawOverlays(this)){
             val resultProcessing = { result: ActivityResult ->
                 if (!Settings.canDrawOverlays(this)) {
-                    Toast.makeText(this,"Floating Window Should be allowed for this App",Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this,
+                        "Floating Window Should be allowed for this App",
+                        Toast.LENGTH_LONG
+                    ).show()
                     finish()
                 }
 
@@ -128,7 +193,10 @@ class Main : AppCompatActivity() {
 
             val launcher: ActivityResultLauncher<Intent> = registerForActivityResult(
                 ActivityResultContracts.StartActivityForResult(),resultProcessing)
-            val checkIntent: Intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${this.packageName}"))
+            val checkIntent: Intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:${this.packageName}")
+            )
             launcher.launch(checkIntent)
 
         }

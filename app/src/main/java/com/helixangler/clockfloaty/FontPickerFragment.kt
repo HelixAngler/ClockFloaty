@@ -21,7 +21,8 @@ class FontPickerFragment : DialogFragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
@@ -33,12 +34,27 @@ class FontPickerFragment : DialogFragment() {
         generateFontConfig(savedInstanceState)
         generateButtonsListeners()
     }
+
     fun generateFontConfig(savedInstanceState: Bundle?){
-        var dataPreference = this.requireActivity().applicationContext.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
-        //Toast.makeText(requireContext(),arguments?.getString("targetColorPickKey",""),Toast.LENGTH_SHORT).show()
-        if(savedInstanceState != null) pickedFont = savedInstanceState!!.getString("pickedFont",dataPreference.getString("widgetTextFont",getString(R.string.defaultWidgetFont)))
-        else pickedFont = dataPreference.getString("widgetTextFont",getString(R.string.defaultWidgetFont))
+        var dataPreference = this.requireActivity().applicationContext.getSharedPreferences(
+            getString(R.string.preference_file_key),
+            Context.MODE_PRIVATE
+        )
+
+        if(savedInstanceState != null) pickedFont = savedInstanceState!!.getString(
+            "pickedFont",
+            dataPreference.getString(
+                "widgetTextFont",
+                getString(R.string.defaultWidgetFont)
+            )
+        )
+        else pickedFont = dataPreference.getString(
+            "widgetTextFont",
+            getString(R.string.defaultWidgetFont)
+        )
+
         showPreviewFont()
+
         var fontListing = requireView().findViewById(R.id.fontOptionsContainer) as ListView
         val path = "/system/fonts"
         val file = File(path)
@@ -47,7 +63,12 @@ class FontPickerFragment : DialogFragment() {
         for(item in file.listFiles().asList()){
             fileList.add(item.name)
         }
-        var adapter:ArrayAdapter<String> = ArrayAdapter(requireContext(),R.layout.support_simple_spinner_dropdown_item,fileList)
+
+        var adapter:ArrayAdapter<String> = ArrayAdapter(
+            requireContext(),
+            R.layout.support_simple_spinner_dropdown_item,
+            fileList
+        )
 
         fontListing.adapter = adapter
         fontListing.setOnItemClickListener { parent, view, position, id ->
@@ -82,7 +103,10 @@ class FontPickerFragment : DialogFragment() {
     }
 
     fun confirmFontPick(){
-        var dataPreference = this.requireActivity().applicationContext.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+        var dataPreference = this.requireActivity().applicationContext.getSharedPreferences(
+            getString(R.string.preference_file_key),
+            Context.MODE_PRIVATE
+        )
 
         dataPreference.edit().putString("widgetTextFont",pickedFont).apply()
         dismiss()
